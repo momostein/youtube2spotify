@@ -105,3 +105,7 @@ venv.bak/
 
 # Flask secret key
 secret.key
+
+# Youtube API credentials
+client_secret.json
+client_secret_web.json
