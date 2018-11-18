@@ -102,3 +102,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Youtube API credentials
+client_secret.json
+client_secret_web.json
