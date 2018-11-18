@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# Youtube API wrapper and a flask blueprint for the authentication
 
 import os
 
@@ -19,17 +19,13 @@ SCOPES = ['https://www.googleapis.com/auth/youtube.force-ssl']
 API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
 
-app = flask.Flask(__name__)
-# Note: A secret key is included in the sample so that it works, but if you
-# use this code in your application please replace this with a truly secret
-# key. See http://flask.pocoo.org/docs/0.12/quickstart/#sessions.
-app.secret_key = b'B\xa7\xb5\xe0M&\x9d\xc1\x94z\xe9\xa23U\xdd\xea\xbaq\xb1\x955:4\xf0'
+youtube = flask.Blueprint('youtube', __name__, url_prefix='/youtube')
 
 
-@app.route('/')
+@youtube.route('/')
 def index():
     if 'credentials' not in flask.session:
-        return flask.redirect('authorize')
+        return flask.redirect(flask.url_for('youtube.authorize'))
 
     # Load the credentials from the session.
     credentials = google.oauth2.credentials.Credentials(
@@ -43,13 +39,13 @@ def index():
                                      forUsername='GoogleDevelopers')
 
 
-@app.route('/authorize')
+@youtube.route('/authorize')
 def authorize():
     # Create a flow instance to manage the OAuth 2.0 Authorization Grant Flow
     # steps.
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE, scopes=SCOPES)
-    flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
+    flow.redirect_uri = flask.url_for('youtube.oauth2callback', _external=True)
     authorization_url, state = flow.authorization_url(
         # This parameter enables offline access which gives your application
         # both an access and refresh token.
@@ -64,14 +60,14 @@ def authorize():
     return flask.redirect(authorization_url)
 
 
-@app.route('/oauth2callback')
+@youtube.route('/oauth2callback')
 def oauth2callback():
     # Specify the state when creating the flow in the callback so that it can
     # verify the authorization server response.
     state = flask.session['state']
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
-    flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
+    flow.redirect_uri = flask.url_for('youtube.oauth2callback', _external=True)
 
     # Use the authorization server's response to fetch the OAuth 2.0 tokens.
     authorization_response = flask.request.url
@@ -91,7 +87,7 @@ def oauth2callback():
         'scopes': credentials.scopes
     }
 
-    return flask.redirect(flask.url_for('index'))
+    return flask.redirect(flask.url_for('youtube.index'))
 
 
 def channels_list_by_username(client, **kwargs):
@@ -100,10 +96,3 @@ def channels_list_by_username(client, **kwargs):
     ).execute()
 
     return flask.jsonify(**response)
-
-
-if __name__ == '__main__':
-    # When running locally, disable OAuthlib's HTTPs verification. When
-    # running in production *do not* leave this option enabled.
-    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-    app.run('localhost', 8090, debug=True)
