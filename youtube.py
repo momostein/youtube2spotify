@@ -27,16 +27,36 @@ def index():
     if 'credentials' not in flask.session:
         return flask.redirect(flask.url_for('youtube.authorize'))
 
-    # Load the credentials from the session.
-    credentials = google.oauth2.credentials.Credentials(
-        **flask.session['credentials'])
+    client = get_authenticated_service()
 
-    client = googleapiclient.discovery.build(
-        API_SERVICE_NAME, API_VERSION, credentials=credentials)
+    return channels_list(client,
+                         part='snippet,id',
+                         forUsername='vloepser')
 
-    return channels_list_by_username(client,
-                                     part='snippet,contentDetails,statistics',
-                                     forUsername='GoogleDevelopers')
+
+@youtube.route('/list')
+def list():
+    if 'credentials' not in flask.session:
+        return flask.redirect(flask.url_for('youtube.authorize'))
+
+    client = get_authenticated_service()
+
+    return playlists_list(client,
+                          part='snippet,id',
+                          channelId='UC3N_01dmY6VlPPlfi_XsFcg')
+
+
+@youtube.route('/videos')
+def videos():
+    if 'credentials' not in flask.session:
+        return flask.redirect(flask.url_for('youtube.authorize'))
+
+    client = get_authenticated_service()
+
+    return playlistItems_list(client,
+                              part='snippet',
+                              playlistId='PLZh_gsoIZWHoU8Diy2MpsDXWKGoPF-Kya',
+                              maxResults=50)
 
 
 @youtube.route('/authorize')
@@ -90,9 +110,38 @@ def oauth2callback():
     return flask.redirect(flask.url_for('youtube.index'))
 
 
-def channels_list_by_username(client, **kwargs):
+def channels_list(client, **kwargs):
     response = client.channels().list(
         **kwargs
     ).execute()
 
     return flask.jsonify(**response)
+
+
+def playlists_list(client, **kwargs):
+    response = client.playlists().list(
+        **kwargs
+    ).execute()
+
+    return flask.jsonify(**response)
+
+
+def playlistItems_list(client, **kwargs):
+    response = client.playlistItems().list(
+        **kwargs
+    ).execute()
+
+    return flask.jsonify(**response)
+
+
+def get_authenticated_service():
+    if 'credentials' not in flask.session:
+        raise Exception("Program not yet authenticated")
+
+    # Load the credentials from the session.
+    credentials = google.oauth2.credentials.Credentials(
+        **flask.session['credentials'])
+
+    return googleapiclient.discovery.build(API_SERVICE_NAME,
+                                           API_VERSION,
+                                           credentials=credentials)
