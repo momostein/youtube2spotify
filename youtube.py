@@ -59,6 +59,19 @@ def videos():
                               maxResults=50)
 
 
+@youtube.route('/search')
+def search():
+    if 'credentials' not in flask.session:
+        return flask.redirect(flask.url_for('youtube.authorize'))
+
+    client = get_authenticated_service()
+
+    return search_list(client,
+                       part='snippet',
+                       q='vloepser steven',
+                       type='playlist')
+
+
 @youtube.route('/authorize')
 def authorize():
     # Create a flow instance to manage the OAuth 2.0 Authorization Grant Flow
@@ -128,6 +141,14 @@ def playlists_list(client, **kwargs):
 
 def playlistItems_list(client, **kwargs):
     response = client.playlistItems().list(
+        **kwargs
+    ).execute()
+
+    return flask.jsonify(**response)
+
+
+def search_list(client, **kwargs):
+    response = client.search().list(
         **kwargs
     ).execute()
 
