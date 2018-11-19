@@ -3,6 +3,7 @@
 import os
 
 import flask
+import requests
 
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
@@ -121,6 +122,29 @@ def oauth2callback():
     }
 
     return flask.redirect(flask.url_for('youtube.index'))
+
+
+@youtube.route('/revoke')
+def revoke():
+    out = "Not logged in"
+
+    if 'credentials' in flask.session:
+        credentials = flask.session.pop('credentials', None)
+
+        r = requests.post('https://accounts.google.com/o/oauth2/revoke',
+                          params={'token': credentials['token']},
+                          headers={'content-type': 'application/x-www-form-urlencoded'})
+
+        out = "logged out, status code {:d}".format(r.status_code)
+
+    return out
+
+
+@youtube.route('/logout')
+def logout():
+    flask.session.pop('credentials', None)
+
+    return "Logged out"
 
 
 def channels_list(client, **kwargs):
