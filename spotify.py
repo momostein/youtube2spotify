@@ -3,8 +3,9 @@
 import flask
 import json
 
+from functools import wraps
 from authlib.flask.client import OAuth
-
+from authlib.client.errors import TokenExpiredError, MissingTokenError
 
 CLIENT_SECRETS_FILE = 'spotify_secret.json'
 SESSION_KEY = 'spotify_token'
@@ -17,6 +18,29 @@ oauth = OAuth()
 
 def fetch_spotify_token():
     return flask.session.get(SESSION_KEY)
+
+
+def requires_auth(f):
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_url = flask.url_for('spotify.authorize')
+
+        if SESSION_KEY not in flask.session:
+            return flask.redirect(auth_url)
+
+        try:
+            return f(*args, **kwargs)
+
+        except TokenExpiredError as error:
+            print(error)
+            return flask.redirect(auth_url)
+
+        except MissingTokenError as error:
+            print(error)
+            return flask.redirect(auth_url)
+
+    return decorated
 
 
 spotify = oauth.register(
@@ -37,9 +61,8 @@ spotifyBP = flask.Blueprint('spotify', __name__, url_prefix='/spotify')
 
 
 @spotifyBP.route('/')
+@requires_auth
 def index():
-    if SESSION_KEY not in flask.session:
-        return flask.redirect(flask.url_for('spotify.authorize'))
 
     me = spotify.get('/v1/me').json()
 
@@ -52,6 +75,17 @@ def index():
     except KeyError as error:
         print(error)
         return flask.jsonify(me)
+
+
+@spotifyBP.route('/search')
+@requires_auth
+def search():
+    params = {'q': 'banana man tally hall',
+              'type': 'track'}
+
+    resp = spotify.get('/v1/search', params=params)
+
+    return flask.jsonify(resp.json())
 
 
 @spotifyBP.route('/authorize')
