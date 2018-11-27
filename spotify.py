@@ -72,4 +72,4 @@ def oauth2callback():
     print(token)
 
     flask.session[SESSION_KEY] = token
-    return flask.url_for('spotify.index', next=flask.request.args.get('next'))
+    return flask.redirect(flask.url_for('spotify.index', next=flask.request.args.get('next')))
