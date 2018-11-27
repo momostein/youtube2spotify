@@ -25,7 +25,7 @@ spotify = oauth.register(
     # list of scopes can be found in the url below
     # https://developer.spotify.com/web-api/using-scopes/
     request_token_params={'scope': 'user-read-email playlist-modify-public'},
-    api_base_url='https://api.spotify.com/v1/',
+    api_base_url='https://api.spotify.com',
     access_token_url='https://accounts.spotify.com/api/token',
     authorize_url='https://accounts.spotify.com/authorize',
     client_id=CLIENT['client_id'],
