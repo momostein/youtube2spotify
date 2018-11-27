@@ -109,3 +109,9 @@ secret.key
 # Youtube API credentials
 client_secret.json
 client_secret_web.json
+
+# Spotify API credentials
+spotify_secret.json
+
+# Debug file
+out.json
