@@ -4,6 +4,9 @@ google-auth
 google-auth-oauthlib
 google-auth-httplib2
 
+# Spotify API
+spotipy
+
 # Web app
 flask
 requests
