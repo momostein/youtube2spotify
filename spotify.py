@@ -3,7 +3,7 @@
 import flask
 import json
 
-from flask_oauthlib.client import OAuth, OAuthException
+from authlib.flask.client import OAuth
 
 
 CLIENT_SECRETS_FILE = 'spotify_secret.json'
@@ -14,19 +14,23 @@ with open(CLIENT_SECRETS_FILE, 'r') as f:
 
 oauth = OAuth()
 
-spotify = oauth.remote_app(
+
+def fetch_spotify_token():
+    return flask.session.get(SESSION_KEY)
+
+
+spotify = oauth.register(
     'spotify',
     # Change the scope to match whatever it us you need
     # list of scopes can be found in the url below
     # https://developer.spotify.com/web-api/using-scopes/
-    request_token_params={'scope': 'user-read-email'},
-    base_url='https://api.spotify.com',
-    request_token_url=None,
+    request_token_params={'scope': 'user-read-email playlist-modify-public'},
+    api_base_url='https://api.spotify.com/v1/',
     access_token_url='https://accounts.spotify.com/api/token',
     authorize_url='https://accounts.spotify.com/authorize',
-    app_key='SPOTIFY',
-    consumer_key=CLIENT['client_id'],
-    consumer_secret=CLIENT['client_secret']
+    client_id=CLIENT['client_id'],
+    client_secret=CLIENT['client_secret'],
+    fetch_token=fetch_spotify_token
 )
 
 spotifyBP = flask.Blueprint('spotify', __name__, url_prefix='/spotify')
@@ -37,17 +41,17 @@ def index():
     if SESSION_KEY not in flask.session:
         return flask.redirect(flask.url_for('spotify.authorize'))
 
-    me = spotify.get('/v1/me')
+    me = spotify.get('/v1/me').json()
 
     try:
         return 'Logged in as id={0} name={1} redirect={2}'.format(
-            me.data['id'],
-            me.data['name'],
+            me['id'],
+            me['display_name'],
             flask.request.args.get('next')
         )
     except KeyError as error:
         print(error)
-        return flask.jsonify(me.data)
+        return flask.jsonify(me)
 
 
 @spotifyBP.route('/authorize')
@@ -58,26 +62,14 @@ def authorize():
 
                              _external=True)
 
-    return spotify.authorize(callback=callback)
+    return spotify.authorize_redirect(callback)
 
 
 @spotifyBP.route('/oauth2callback')
 def oauth2callback():
-    resp = spotify.authorized_response()
+    token = spotify.authorize_access_token()
 
-    if resp is None:
-        return 'Access denied: reason={0} error={1}'.format(
-            flask.request.args['error_reason'],
-            flask.request.args['error_description']
-        )
+    print(token)
 
-    if isinstance(resp, OAuthException):
-        return 'Access denied: {0}'.format(resp.message)
-
-    flask.session[SESSION_KEY] = (resp['access_token'], '')
+    flask.session[SESSION_KEY] = token
     return flask.url_for('spotify.index', next=flask.request.args.get('next'))
-
-
-@spotify.tokengetter
-def get_spotify_oauth_token():
-    return flask.session.get(SESSION_KEY)
