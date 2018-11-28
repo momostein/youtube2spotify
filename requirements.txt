@@ -4,10 +4,14 @@ google-auth
 google-auth-oauthlib
 google-auth-httplib2
 
-# Spotify API
-spotipy
+# Authentication
+authlib
 
 # Web app
 flask
 requests
 pyopenssl
+
+# String Matching
+# optional: python-Levenshtein
+fuzzywuzzy
