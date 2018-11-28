@@ -55,9 +55,9 @@ def videos():
     client = get_authenticated_service()
 
     return playlistItems_list(client,
-                              part='snippet',
+                              part='snippet,contentDetails',
                               playlistId='PLZh_gsoIZWHoU8Diy2MpsDXWKGoPF-Kya',
-                              maxResults=50)
+                              maxResults=10)
 
 
 @youtube.route('/search')
@@ -71,6 +71,24 @@ def search():
                        part='snippet',
                        q='vloepser steven',
                        type='playlist')
+
+
+@youtube.route('/allvideos')
+def allVideos():
+    if 'credentials' not in flask.session:
+        return flask.redirect(flask.url_for('youtube.authorize'))
+
+    client = get_authenticated_service()
+
+    videos = playlistItems_allItems(client,
+                                    part='snippet',
+                                    playlistId='PLZh_gsoIZWHoU8Diy2MpsDXWKGoPF-Kya')
+
+    out = ""
+    for video in videos:
+        out += video["snippet"]["title"] + '<br>'
+
+    return out
 
 
 @youtube.route('/authorize')
@@ -177,6 +195,35 @@ def search_list(client, **kwargs):
     ).execute()
 
     return flask.jsonify(**response)
+
+
+def playlistItems_allItems(client, part, playlistId):
+    page = 1
+
+    print("Requesting page", page)
+    response = response = client.playlistItems().list(
+        part=part, playlistId=playlistId, maxResults=50
+    ).execute()
+
+    print('items:', len(response['items']))
+
+    for item in response['items']:
+        yield item
+
+    while 'nextPageToken' in response:
+        token = response['nextPageToken']
+
+        page += 1
+        print("Requesting page", page)
+
+        response = client.playlistItems().list(
+            part=part, playlistId=playlistId, pageToken=token, maxResults=50
+        ).execute()
+
+        print('items:', len(response['items']))
+        
+        for item in response['items']:
+            yield item
 
 
 def get_authenticated_service():
