@@ -66,6 +66,9 @@ def index():
 
     me = spotify.get('/v1/me').json()
 
+    with open('out.json', 'w') as outfile:
+        json.dump(me, outfile, indent=4, sort_keys=True)
+
     try:
         return 'Logged in as id={0} name={1} redirect={2}'.format(
             me['id'],
@@ -80,12 +83,22 @@ def index():
 @spotifyBP.route('/search')
 @requires_auth
 def search():
-    params = {'q': 'banana man tally hall',
-              'type': 'track'}
+    params = {'q': 'joji',
+              'type': 'track',
+              'limit': 50}
 
     resp = spotify.get('/v1/search', params=params)
+    data = resp.json()
 
-    return flask.jsonify(resp.json())
+    with open('out.json', 'w') as outfile:
+        json.dump(data, outfile, indent=4, sort_keys=True)
+
+    out = ""
+    for track in data['tracks']['items']:
+        out += "{0:s} - {1:s} ({2:s})<br>".format(
+            track['artists'][0]['name'], track['name'], track['id'])
+
+    return out
 
 
 @spotifyBP.route('/authorize')
