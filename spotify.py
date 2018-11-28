@@ -83,7 +83,7 @@ def index():
 @spotifyBP.route('/search')
 @requires_auth
 def search():
-    params = {'q': 'joji',
+    params = {'q': 'Kansas - Carry On Wayward Son',
               'type': 'track',
               'limit': 50}
 
@@ -97,6 +97,9 @@ def search():
     for track in data['tracks']['items']:
         out += "{0:s} - {1:s} ({2:s})<br>".format(
             track['artists'][0]['name'], track['name'], track['id'])
+
+    if out == "":
+        out = "No tracks found"
 
     return out
 
