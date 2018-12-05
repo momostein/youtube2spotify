@@ -12,6 +12,8 @@ app.secret_key = secret_key.get(True)
 app.register_blueprint(youtube.youtube)
 app.register_blueprint(spotify.spotifyBP)
 
+spotify.oauth.init_app(app)
+
 
 @app.route("/")
 def index():

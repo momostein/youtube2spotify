@@ -113,5 +113,8 @@ client_secret_web.json
 # Spotify API credentials
 spotify_secret.json
 
+# Genius API credentials
+genius_secret.json
+
 # Debug file
 out.json
