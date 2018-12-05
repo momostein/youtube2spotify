@@ -45,7 +45,7 @@ def requires_auth(f):
 
 
 genius = oauth.register(
-    'spotify',
+    'genius',
     # Change the scope to match whatever it us you need
     # list of scopes can be found in the url below
     # https://docs.genius.com/#/authentication-h1
