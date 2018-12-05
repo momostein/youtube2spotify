@@ -64,7 +64,8 @@ geniusBP = flask.Blueprint('genius', __name__, url_prefix='/genius')
 @geniusBP.route('/')
 @requires_auth
 def index():
-    me = genius.get('/account').json()
+    query = 'Gotye - Somebody That I Used To Know (feat. Kimbra)'
+    me = search(query).json()
 
     return flask.jsonify(me)
 
@@ -88,3 +89,8 @@ def oauth2callback():
 
     flask.session[SESSION_KEY] = token
     return flask.redirect(flask.url_for('genius.index', next=flask.request.args.get('next')))
+
+
+def search(q):
+    params = {'q': q}
+    return genius.get('/search', params=params)
