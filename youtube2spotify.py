@@ -7,6 +7,7 @@ import flask
 import secret_key
 import youtube
 import spotify
+import celery.exceptions as cex
 
 from flask_celery import make_celery
 
@@ -36,7 +37,10 @@ def process(name):
 
     result = reverse.delay(name)
 
-    return result.wait()
+    try:
+        return result.wait(timeout=2)
+    except cex.TimeoutError as e:
+        return str(e)
 
 
 @celery.task(name='celery_example.reverse')
