@@ -1,7 +1,5 @@
 # Youtube API wrapper and a flask blueprint for the authentication
 
-import os
-
 import flask
 import requests
 
@@ -221,7 +219,7 @@ def playlistItems_allItems(client, part, playlistId):
         ).execute()
 
         print('items:', len(response['items']))
-        
+
         for item in response['items']:
             yield item
 
