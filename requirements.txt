@@ -17,4 +17,5 @@ pyopenssl
 fuzzywuzzy
 
 # Celery for background tasks
-celery
+celery==4.2.0
+eventlet
