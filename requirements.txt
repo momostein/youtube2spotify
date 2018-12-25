@@ -15,3 +15,6 @@ pyopenssl
 # String Matching
 # optional: python-Levenshtein
 fuzzywuzzy
+
+# Celery for background tasks
+celery
