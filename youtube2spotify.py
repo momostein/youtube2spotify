@@ -1,11 +1,22 @@
 # Main flask app
+#
+# use this command to start the celery worker:
+# celery -A youtube2spotify.celery worker --pool=eventlet --loglevel=info
 
 import flask
 import secret_key
 import youtube
 import spotify
 
+from flask_celery import make_celery
+
 app = flask.Flask(__name__)
+app.config.update(
+    CELERY_BROKER_URL='amqp://guest:guest@localhost:5672',
+    CELERY_RESULT_BACKEND='rpc://guest:guest@localhost:5672'
+)
+
+celery = make_celery(app)
 
 app.secret_key = secret_key.get(True)
 
@@ -18,6 +29,19 @@ spotify.oauth.init_app(app)
 @app.route("/")
 def index():
     return "Index page"
+
+
+@app.route("/process/<name>")
+def process(name):
+
+    result = reverse.delay(name)
+
+    return result.wait()
+
+
+@celery.task(name='celery_example.reverse')
+def reverse(string):
+    return string[::-1]
 
 
 if __name__ == "__main__":
