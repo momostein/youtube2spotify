@@ -4,9 +4,11 @@
 # celery -A youtube2spotify.celery worker --pool=eventlet --loglevel=info
 
 import flask
+
 import secret_key
 import youtube
 import spotify
+import genius
 import celery.exceptions as cex
 
 from flask_celery import make_celery
@@ -23,8 +25,10 @@ app.secret_key = secret_key.get(True)
 
 app.register_blueprint(youtube.youtube)
 app.register_blueprint(spotify.spotifyBP)
+app.register_blueprint(genius.geniusBP)
 
 spotify.oauth.init_app(app)
+genius.oauth.init_app(app)
 
 
 @app.route("/")
