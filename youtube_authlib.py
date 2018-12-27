@@ -74,8 +74,8 @@ def index():
     if SESSION_KEY not in flask.session:
         return flask.redirect(flask.url_for('youtube.authorize'))
 
-    return channels_list(part='snippet,id',
-                         forUsername='vloepser')
+    return flask.jsonify(**channels_list(part='snippet,id',
+                                         forUsername='vloepser'))
 
 
 @youtubeBP.route('/authorize')
@@ -127,4 +127,4 @@ def logout():
 def channels_list(**kwargs):
     response = youtube.get('/youtube/v3/channels', params=kwargs).json()
 
-    return flask.jsonify(**response)
+    return response

@@ -3,11 +3,13 @@ import eventlet
 eventlet.monkey_patch()
 
 import time
+import json
+import os
 from threading import Thread
 
 import flask
 from flask_socketio import SocketIO
-import os
+
 
 import secret_key
 import youtube_authlib as youtube
@@ -25,6 +27,8 @@ socketio = SocketIO(app)
 
 thread = None
 
+threads = []
+
 
 @app.route("/")
 def index():
@@ -40,12 +44,36 @@ def socket():
     return flask.render_template('socket.html')
 
 
+@app.route('/asyncreq')
+def asyncreq():
+    thread = Thread(target=flask.copy_current_request_context(async_request))
+    thread.start()
+
+    threads.append(thread)
+
+    return flask.render_template('asyncreq.html')
+
+
 def background_stuff():
     print('In background_stuff')
     while True:
         time.sleep(1)
         t = str(time.process_time())
         socketio.emit('message', {'data': 'this is data', 'time': t}, namespace='/test')
+
+
+def async_request():
+    print('Requesting')
+    with app.app_context():
+        channels = youtube.channels_list(part='snippet,id',
+                                         forUsername='vloepser')
+    print('requested')
+
+    print(json.dumps(channels, indent=4, sort_keys=True))
+
+    time.sleep(2)
+
+    socketio.emit('request', {'channels': json.dumps(channels)}, namespace='/youtube')
 
 
 if __name__ == "__main__":
