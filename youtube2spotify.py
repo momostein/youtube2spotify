@@ -46,7 +46,10 @@ def socket():
 
 @app.route('/asyncreq')
 def asyncreq():
-    thread = Thread(target=flask.copy_current_request_context(async_request))
+    # Wrap the target function to copy the request context
+    target = flask.copy_current_request_context(async_request)
+    thread = Thread(target=target)
+
     thread.start()
 
     threads.append(thread)
@@ -64,11 +67,11 @@ def background_stuff():
 
 def async_request():
     print('Requesting')
-    with app.app_context():
-        channels = youtube.channels_list(part='snippet,id',
-                                         forUsername='vloepser')
-    print('requested')
 
+    channels = youtube.channels_list(part='snippet,id',
+                                         forUsername='vloepser')
+
+    print('Requested:')
     print(json.dumps(channels, indent=4, sort_keys=True))
 
     time.sleep(2)
