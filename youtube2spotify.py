@@ -69,7 +69,7 @@ def async_request():
     print('Requesting')
 
     channels = youtube.channels_list(part='snippet,id',
-                                         forUsername='vloepser')
+                                     forUsername='vloepser')
 
     print('Requested:')
     print(json.dumps(channels, indent=4, sort_keys=True))
