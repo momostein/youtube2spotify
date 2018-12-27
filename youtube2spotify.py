@@ -6,7 +6,7 @@ import time
 from threading import Thread
 
 import flask
-from flask_socketio import SocketIO, emit, join_room, disconnect
+from flask_socketio import SocketIO
 import os
 
 import secret_key

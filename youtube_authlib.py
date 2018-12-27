@@ -71,7 +71,7 @@ youtubeBP = flask.Blueprint('youtube', __name__, url_prefix='/youtube')
 @youtubeBP.route('/')
 @requires_auth
 def index():
-    if 'credentials' not in flask.session:
+    if SESSION_KEY not in flask.session:
         return flask.redirect(flask.url_for('youtube.authorize'))
 
     return channels_list(part='snippet,id',
@@ -96,18 +96,20 @@ def oauth2callback():
     print(token)
 
     flask.session[SESSION_KEY] = token
-    return flask.redirect(flask.url_for('spotify.index', next=flask.request.args.get('next')))
+    return flask.redirect(flask.url_for('youtube.index', next=flask.request.args.get('next')))
 
 
 @youtubeBP.route('/revoke')
 def revoke():
     out = "Not logged in"
 
-    if 'credentials' in flask.session:
-        credentials = flask.session.pop('credentials', None)
+    if SESSION_KEY in flask.session:
+        credentials = flask.session.pop(SESSION_KEY, None)
+
+        print(credentials)
 
         r = requests.post('https://accounts.google.com/o/oauth2/revoke',
-                          params={'token': credentials['token']},
+                          params={'token': credentials['access_token']},
                           headers={'content-type': 'application/x-www-form-urlencoded'})
 
         out = "logged out, status code {:d}".format(r.status_code)
@@ -117,7 +119,7 @@ def revoke():
 
 @youtubeBP.route('/logout')
 def logout():
-    flask.session.pop('credentials', None)
+    flask.session.pop(SESSION_KEY, None)
 
     return "Logged out"
 
