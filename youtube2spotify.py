@@ -10,15 +10,16 @@ from flask_socketio import SocketIO, emit, join_room, disconnect
 import os
 
 import secret_key
-import youtube
+import youtube_authlib as youtube
 import spotify
 
 app = flask.Flask(__name__)
 app.secret_key = secret_key.get(True)
 
-app.register_blueprint(youtube.youtube)
+app.register_blueprint(youtube.youtubeBP)
 app.register_blueprint(spotify.spotifyBP)
 spotify.oauth.init_app(app)
+youtube.oauth.init_app(app)
 
 socketio = SocketIO(app)
 
