@@ -10,7 +10,8 @@ REMOVE = [r'((with )|(w ))?lyrics?',
           r'1080p',
           r'official',
           r'link in description',
-          r'studio version']
+          r'studio version',
+          r'Mafia III Trailer 3 Casino Battlefield V']
 
 
 def trim(title):

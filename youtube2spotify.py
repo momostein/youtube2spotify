@@ -16,6 +16,7 @@ import secret_key
 import youtube_authlib as youtube
 import spotify
 import genius
+import title_trim
 
 app = flask.Flask(__name__)
 app.secret_key = secret_key.get(True)
@@ -65,6 +66,7 @@ def asyncreq():
 
 @app.route('/convert')
 @youtube.requires_auth
+# @genius.requires_auth
 def convert():
     global convertThread
     if convertThread is None or not convertThread.isAlive():
@@ -91,19 +93,31 @@ def background_stuff():
 def convertplayist(playlistId):
     print('Conversion started')
 
-    target = flask.copy_current_request_context(pageGetter)
+    page_target = flask.copy_current_request_context(page_getter)
+    genius_target = flask.copy_current_request_context(genius_checker)
 
-    pageQueue = queue.Queue()
-    pageThread = Thread(target=target, args=['PLZh_gsoIZWHoU8Diy2MpsDXWKGoPF-Kya', pageQueue])
-    pageThread.start()
+    page_queue = queue.Queue()
+    genius_queue = queue.Queue()
+    spotify_queue = queue.Queue()
+
+    yt_thread = Thread(target=page_target, args=['PLZh_gsoIZWHoU8Diy2MpsDXWKGoPF-Kya', page_queue])
+    genius_thread = Thread(target=genius_target, args=[genius_queue, spotify_queue])
+
+    yt_thread.start()
+    genius_thread.start()
 
     # Clear out the file
-    with open('titles.txt', 'w') as title_file:
+    with open('titles.txt', 'w'):
         pass
 
     while True:
-        page = pageQueue.get()
+        page = page_queue.get()
         if page is None:
+            # Wait for the geniusQueue to be done
+            genius_queue.join()
+
+            # End the worker
+            genius_queue.put(None)
             break
 
         print('Got a page')
@@ -112,28 +126,49 @@ def convertplayist(playlistId):
             for item in page['items']:
                 title = item['snippet']['title']
 
+                genius_queue.put(title)
+
                 title_file.write(title)
                 title_file.write('\n')
 
-        pageQueue.task_done()
+        page_queue.task_done()
 
     print('Conversion finished')
 
 
-def pageGetter(playlistId, q):
+def page_getter(playlistId, out_queue):
     with open('pages.txt', 'w') as page_file:
         for i, page in enumerate(youtube.playlistItems_allPages(part='snippet', playlistId=playlistId)):
-            q.put(page)
+            out_queue.put(page)
             print('On Page {:d}'.format(i + 1))
             page_file.write("Page {:d}\n".format(i + 1))
             page_file.write(json.dumps(page, sort_keys=True, indent=4))
             page_file.write('\n')
 
         # Wait for all pages to be processed
-        q.join()
+        out_queue.join()
 
         # Terminate the queue
-        q.put(None)
+        out_queue.put(None)
+
+
+def genius_checker(in_queue, out_queue):
+    # Clear out the file
+    with open("genius.txt", mode="w"):
+        pass
+
+    while True:
+        title = in_queue.get()
+
+        if title is None:
+            break
+
+        trimmed = title_trim.trim(title)
+
+        with open("genius.txt", mode='a', encoding='utf-8') as genius_file:
+            genius_file.write("Title:   {}\n".format(title))
+            genius_file.write("Trimmed: {}\n".format(trimmed))
+            genius_file.write("\n")
 
 
 def async_request():

@@ -13,13 +13,13 @@ def generate(length=16):
     return key
 
 
-def get(generate=False, length=16):
+def get(generate_new=False, length=16):
     try:
         with open(FILENAME, 'rb') as f:
             key = f.read()
 
     except FileNotFoundError as error:
-        if generate:
+        if generate_new:
             key = generate(length)
         else:
             raise (error)
@@ -30,7 +30,7 @@ def get(generate=False, length=16):
 if __name__ == "__main__":
     try:
         length = int(input('Key length: '))
-    except ValueError as error:
+    except ValueError:
         print("You must input a valid number!")
 
     generate(length)
