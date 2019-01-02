@@ -11,6 +11,7 @@ authlib
 flask
 requests
 pyopenssl
+eventlet
 
 # String Matching
 # optional: python-Levenshtein
