@@ -14,6 +14,17 @@ from authlib.client.errors import TokenExpiredError, MissingTokenError
 CLIENT_SECRETS_FILE = "youtube_secret.json"
 SESSION_KEY = 'youtube_token'
 
+# This OAuth 2.0 access scope allows for full read/write access to the
+# authenticated user's account and requires requests to use an SSL connection.
+SCOPES = 'https://www.googleapis.com/auth/youtube.force-ssl'
+API_SERVICE_NAME = 'youtube'
+API_VERSION = 'v3'
+
+
+def get_endpoint(endpoint):
+    return '/' + '/'.join([API_SERVICE_NAME, API_VERSION, endpoint])
+
+
 with open(CLIENT_SECRETS_FILE, 'r') as f:
     CLIENT = json.load(f)
 
@@ -52,18 +63,12 @@ youtube = oauth.register(
     api_base_url='https://www.googleapis.com',
     access_token_url='https://www.googleapis.com/oauth2/v4/token',
     authorize_url='https://accounts.google.com/o/oauth2/v2/auth',
-    authorize_params={'scope': 'https://www.googleapis.com/auth/youtube.force-ssl'},
+    authorize_params={'scope': SCOPES},
     client_id=CLIENT['client_id'],
     client_secret=CLIENT['client_secret'],
     fetch_token=fetch_token
 )
 
-
-# This OAuth 2.0 access scope allows for full read/write access to the
-# authenticated user's account and requires requests to use an SSL connection.
-SCOPES = ['https://www.googleapis.com/auth/youtube.force-ssl']
-API_SERVICE_NAME = 'youtube'
-API_VERSION = 'v3'
 
 youtubeBP = flask.Blueprint('youtube', __name__, url_prefix='/youtube')
 
@@ -125,6 +130,28 @@ def logout():
 
 
 def channels_list(**kwargs):
-    response = youtube.get('/youtube/v3/channels', params=kwargs).json()
+    response = youtube.get(get_endpoint('channels'), params=kwargs)
 
-    return response
+    return response.json()
+
+
+def playlistItems_list(**kwargs):
+    response = youtube.get(get_endpoint('playlistItems'), params=kwargs)
+
+    return response.json()
+
+
+def playlistItems_allPages(**kwargs):
+    if 'pageToken' in kwargs:
+        raise ValueError("PageToken can't be set")
+
+    kwargs['maxResults'] = min(50, max(10, kwargs.get('maxResults', 50)))
+
+    response = playlistItems_list(**kwargs)
+    yield response
+
+    while 'nextPageToken' in response:
+        token = response['nextPageToken']
+        response = playlistItems_list(**kwargs, pageToken=token)
+
+        yield response

@@ -199,7 +199,7 @@ def playlistItems_allItems(client, part, playlistId):
     page = 1
 
     print("Requesting page", page)
-    response = response = client.playlistItems().list(
+    response = client.playlistItems().list(
         part=part, playlistId=playlistId, maxResults=50
     ).execute()
 
