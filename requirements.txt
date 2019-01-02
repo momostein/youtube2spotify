@@ -15,3 +15,7 @@ pyopenssl
 # String Matching
 # optional: python-Levenshtein
 fuzzywuzzy
+
+# Socket IO for threading and async requests fetch
+Flask-SocketIO
+gevent
