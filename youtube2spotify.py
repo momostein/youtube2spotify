@@ -166,13 +166,26 @@ def genius_checker(in_queue, out_queue):
         trimmed = title_trim.trim(title)
 
         search = genius.search(trimmed)
+        status = search['meta']['status']
+        genius_out = ""
 
-        search_json = json.dumps(search, sort_keys=True, indent=4)
+        if status != 200:
+            genius_out = "ERROR - status code: {}\n".format(status)
+
+        elif len(search['response']['hits']) == 0:
+            genius_out = "ERROR - nothing found\n"
+
+        else:
+            for hit in search['response']['hits']:
+                hit_artist = hit['result']['primary_artist']['name']
+                hit_title = hit['result']['title_with_featured']
+
+                genius_out += "Artist: {} \tTitle: {}\n".format(hit_artist, hit_title)
 
         with open("genius.txt", mode='a', encoding='utf-8') as genius_file:
             genius_file.write("Title:   {}\n".format(title))
             genius_file.write("Trimmed: {}\n".format(trimmed))
-            genius_file.write("genius: {}\n".format(search_json))
+            genius_file.write("genius:\n{}".format(genius_out))
             genius_file.write("\n")
 
         in_queue.task_done()
