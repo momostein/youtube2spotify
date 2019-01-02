@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<title>Flask-SocketIO Test</title>
+</head>
+
+<body>
+	<h3>Demo-Flask-SocketIO</h3>
+	<p id='test'> Hello </p>
+
+	<script src="//cdn.socket.io/socket.io-1.2.0.js"></script>
+	<script src="//code.jquery.com/jquery-1.11.1.js"></script>
+	<script type="text/javascript">
+		namespace = '/test';
+
+
+		var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+
+		socket.on('connect', function(msg) {
+			socket.emit('my event', {
+				data: 'I\'m connected!'
+			});
+		});
+
+		socket.on('message', function(msg) {
+			console.log(msg.time);
+			$('#test').html('<p>' + msg.time + '</p>');
+		});
+	</script>
+</body>
+
+</html>
