@@ -176,11 +176,11 @@ def genius_checker(in_queue, out_queue):
             genius_out = "ERROR - nothing found\n"
 
         else:
-            for hit in search['response']['hits']:
+            for i, hit in enumerate(search['response']['hits']):
                 hit_artist = hit['result']['primary_artist']['name']
                 hit_title = hit['result']['title_with_featured']
 
-                genius_out += "Artist: {} \tTitle: {}\n".format(hit_artist, hit_title)
+                genius_out += "({:<3d}) Artist: {} \tTitle: {}\n".format(i, hit_artist, hit_title)
 
         with open("genius.txt", mode='a', encoding='utf-8') as genius_file:
             genius_file.write("Title:   {}\n".format(title))
