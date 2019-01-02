@@ -66,7 +66,7 @@ def asyncreq():
 
 @app.route('/convert')
 @youtube.requires_auth
-# @genius.requires_auth
+@genius.requires_auth
 def convert():
     global convertThread
     if convertThread is None or not convertThread.isAlive():
@@ -165,9 +165,14 @@ def genius_checker(in_queue, out_queue):
 
         trimmed = title_trim.trim(title)
 
+        search = genius.search(trimmed)
+
+        search_json = json.dumps(search, sort_keys=True, indent=4)
+
         with open("genius.txt", mode='a', encoding='utf-8') as genius_file:
             genius_file.write("Title:   {}\n".format(title))
             genius_file.write("Trimmed: {}\n".format(trimmed))
+            genius_file.write("genius: {}\n".format(search_json))
             genius_file.write("\n")
 
         in_queue.task_done()

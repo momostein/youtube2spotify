@@ -65,7 +65,7 @@ geniusBP = flask.Blueprint('genius', __name__, url_prefix='/genius')
 @requires_auth
 def index():
     query = 'Gotye - Somebody That I Used To Know (feat. Kimbra)'
-    me = search(query).json()
+    me = search(query)
 
     return flask.jsonify(me)
 
@@ -93,4 +93,6 @@ def oauth2callback():
 
 def search(q):
     params = {'q': q}
-    return genius.get('/search', params=params)
+    response = genius.get('/search', params=params)
+
+    return response.json()
