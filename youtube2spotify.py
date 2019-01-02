@@ -170,6 +170,8 @@ def genius_checker(in_queue, out_queue):
             genius_file.write("Trimmed: {}\n".format(trimmed))
             genius_file.write("\n")
 
+        in_queue.task_done()
+
 
 def async_request():
     print('Requesting')
